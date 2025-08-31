@@ -1,0 +1,15 @@
+# 1) Create env and install
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# 2) Configure key
+copy .env.example .env
+# Edit .env, paste ODDS_API_KEY from https://the-odds-api.com/
+
+# 3) Run
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# 4) Test
+# http://127.0.0.1:8000/fixtures
+# http://127.0.0.1:8000/docs
