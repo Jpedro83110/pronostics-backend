@@ -1,8 +1,8 @@
 import requests
 from typing import List, Dict, Any
 from models import FixtureView, Competition, Odds1X2, Probas1X2
-from ..settings import ODDS_API_KEY, ODDS_API_REGION, ODDS_API_MARKETS, SOCCER_SPORT_KEYS, BASE_URL
-from ..utils import implied_probs_from_odds, consensus_probs
+from settings import ODDS_API_KEY, ODDS_API_REGION, ODDS_API_MARKETS, SOCCER_SPORT_KEYS, BASE_URL
+from utils import implied_probs_from_odds, consensus_probs
 
 HEADERS = {"Accept": "application/json"}
 
