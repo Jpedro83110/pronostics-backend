@@ -8,6 +8,8 @@ import requests
 
 from models import FixtureView, LotoFootReq, ComboResp
 from providers.odds_api import fetch_soccer_odds
+from routes import fixtures_enriched
+app.include_router(fixtures_enriched.router)
 
 # --- Lecture clé RapidAPI depuis l'environnement (via settings si tu préfères)
 import os
