@@ -5,17 +5,12 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import math
 import requests
+import os
 
 from models import FixtureView, LotoFootReq, ComboResp
 from providers.odds_api import fetch_soccer_odds
-from routes import fixtures_enriched
-app.include_router(fixtures_enriched.router)
 
-# --- Lecture clé RapidAPI depuis l'environnement (via settings si tu préfères)
-import os
-API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "")
-API_FOOTBALL_HOST = os.getenv("API_FOOTBALL_HOST", "api-football-v1.p.rapidapi.com")  # RapidAPI par défaut
-
+# --- FastAPI app ---
 app = FastAPI(title="Pronostics Backend (Real API - Value Edge)")
 
 app.add_middleware(
@@ -26,13 +21,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --------------------------------------------------------------------
-# Utils
-# --------------------------------------------------------------------
+# --- API-FOOTBALL (RapidAPI) config ---
+API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "")
+API_FOOTBALL_HOST = os.getenv("API_FOOTBALL_HOST", "api-football-v1.p.rapidapi.com")
+
 def _af_headers() -> Dict[str, str]:
-    """Headers attendus par API-FOOTBALL via RapidAPI."""
     if not API_FOOTBALL_KEY:
-        # On ne lève pas d'exception ici (pour /health), on laissera les routes /af/* gérer proprement
         return {}
     return {
         "X-RapidAPI-Key": API_FOOTBALL_KEY,
@@ -40,7 +34,6 @@ def _af_headers() -> Dict[str, str]:
     }
 
 def _af_base() -> str:
-    # RapidAPI = https://api-football-v1.p.rapidapi.com/v3
     return f"https://{API_FOOTBALL_HOST}/v3"
 
 # --------------------------------------------------------------------
@@ -67,7 +60,7 @@ def fixtures(
         except Exception:
             return True
         ok_from = True if not date_from else ts.date() >= datetime.fromisoformat(date_from).date()
-        ok_to = True if not date_to else ts.date() <= datetime.fromisoformat(date_to).date()
+        ok_to   = True if not date_to   else ts.date() <= datetime.fromisoformat(date_to).date()
         return ok_from and ok_to
 
     items = [it for it in items if within(it.utc_datetime)]
@@ -94,7 +87,6 @@ def combos(req: LotoFootReq):
 # --------------------------------------------------------------------
 # API-FOOTBALL (RapidAPI) — routes de test simples
 # --------------------------------------------------------------------
-
 @app.get("/af/status")
 def af_status() -> Dict[str, Any]:
     """
@@ -139,3 +131,19 @@ def af_fixtures(
         raise HTTPException(status_code=r.status_code, detail=r.text)
     js = r.json()
     return js.get("response", [])
+
+# --------------------------------------------------------------------
+# FIXTURES ENRICHED (placeholder qui marche)
+# --------------------------------------------------------------------
+@app.get("/fixtures/enriched", response_model=List[FixtureView])
+def fixtures_enriched(
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str]   = Query(None),
+    season: Optional[int]    = 2025
+):
+    """
+    Version 'enriched' minimale pour débloquer le front :
+    - Pour l’instant, renvoie exactement la même chose que /fixtures
+    - On enrichira ensuite (forme/blessés/repos) une fois tout en ligne.
+    """
+    return fixtures(date_from=date_from, date_to=date_to, competition_id=None)
